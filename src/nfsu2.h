@@ -3215,7 +3215,8 @@ static int n2_tpk_decode(const unsigned char *d, long len, N2Tpk t, uint32_t has
                  * bounds-check the actual palette/index bytes -- a record
                  * whose declared offsets don't fit the file is corrupt, not
                  * decodable, regardless of what its tag claims. */
-                if (dbase+paloff+1024 > len || dbase+off+(long)w*hh > len) {
+                if ((uint64_t)dbase + (uint64_t)paloff + 1024 > (uint64_t)len ||
+                    (uint64_t)dbase + (uint64_t)off + (uint64_t)w*hh > (uint64_t)len) {
                     free(tex->rgb); free(alf); continue;
                 }
                 const unsigned char *pal = d + dbase + paloff, *ix = d + dbase + off;
@@ -3236,7 +3237,7 @@ static int n2_tpk_decode(const unsigned char *d, long len, N2Tpk t, uint32_t has
                 long dxt3 = is_dxt3;   /* format choice: from the proven +0x3e tag, not size */
                 long bx = ((long)w + 3) / 4, by = ((long)hh + 3) / 4;
                 long need = bx * by * (dxt3 ? 16 : 8);
-                if (dbase + off + need > len) { free(tex->rgb); free(alf); continue; }
+                if ((uint64_t)dbase + (uint64_t)off + (uint64_t)need > (uint64_t)len) { free(tex->rgb); free(alf); continue; }
                 if (dxt3) { n2_dxt3(d + dbase + off, w, hh, tex->rgb, alf); tex->afmt = 3; }
                 else      { n2_dxt1(d + dbase + off, w, hh, tex->rgb, alf); tex->afmt = 1; }
             }

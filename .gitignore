@@ -65,3 +65,4 @@ docs/PROJECT_STATE.md
 docs/OPUS_TASK_TEMPLATE.md
 docs/superpowers/
 tools/capture_vehicle_shots.sh
+build_wasm/
