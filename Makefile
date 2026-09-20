@@ -252,6 +252,40 @@ ai-drive-cli-test: nfsu2
 gles: $(SRC) $(HDRS) $(GEN)
 	$(CC) $(CFLAGS) -DN2_GLES $(SDL_CFLAGS) $(SRC) -o nfsu2 $(SDL_LIBS) -lGLESv2 -lz -lm
 
+# WebAssembly / Emscripten build
+EMCC ?= emcc
+WASM_FLAGS := -O2 -std=c99 -DN2_GLES -Wno-unused-function \
+              -sUSE_SDL=2 -sUSE_ZLIB=1 -sSTACK_SIZE=4MB -sINITIAL_MEMORY=64MB \
+              -sALLOW_MEMORY_GROWTH=1 -sFULL_ES2=1 -sMAX_WEBGL_VERSION=2 \
+              -sASYNCIFY=1 -sEXPORTED_RUNTIME_METHODS='["ccall","cwrap","FS"]'
+
+wasm: $(SRC) $(HDRS) $(GEN)
+	@mkdir -p build/wasm
+	$(EMCC) $(WASM_FLAGS) -Isrc $(SRC) -o build/wasm/nfsu2.js
+
+wasm-web: $(SRC) $(HDRS) $(GEN)
+	@mkdir -p build/web
+	$(EMCC) $(WASM_FLAGS) -Isrc $(SRC) -o build/web/index.html
+
+wasm-test: $(HDRS) $(GEN)
+	@mkdir -p build/wasm
+	@echo "--- Testing car-material on Wasm ---"
+	$(EMCC) -O2 -std=c99 -Wall -Wextra -Wno-unused-function -Isrc tools/car_material_test.c -o build/wasm/car_material_test.js -lm -sSTACK_SIZE=4MB -sINITIAL_MEMORY=64MB
+	node build/wasm/car_material_test.js
+	@echo "--- Testing world-group on Wasm ---"
+	$(EMCC) -O2 -std=c99 -Wall -Wextra -Wno-unused-function tools/world_group_test.c -o build/wasm/world_group_test.js
+	node build/wasm/world_group_test.js
+	@echo "--- Testing world-resident on Wasm ---"
+	$(EMCC) -O2 -std=c99 -DN2_GLES -sUSE_SDL=2 -sUSE_ZLIB=1 -sSTACK_SIZE=4MB -sINITIAL_MEMORY=64MB -DWORLD_RESIDENT_TESTING -Isrc tools/world_resident_test.c src/world_resident.c src/world.c src/resource.c src/world_instance.c src/render.c src/physics.c -o build/wasm/world_resident_test.js
+	node build/wasm/world_resident_test.js
+	@echo "--- Testing ground-motion on Wasm ---"
+	$(EMCC) -O2 -std=c99 -DN2_GLES -sUSE_SDL=2 -sUSE_ZLIB=1 -sSTACK_SIZE=4MB -sINITIAL_MEMORY=64MB -Isrc tools/ground_motion_test.c src/world.c src/resource.c src/world_instance.c src/render.c src/physics.c -o build/wasm/ground_motion_test.js
+	node build/wasm/ground_motion_test.js
+	@echo "--- Testing ai-drive on Wasm ---"
+	$(EMCC) -O2 -std=c99 -DN2_GLES -sUSE_SDL=2 -sUSE_ZLIB=1 -sSTACK_SIZE=4MB -sINITIAL_MEMORY=64MB -Isrc tools/ai_drive_test.c src/ai.c src/world.c src/resource.c src/world_instance.c src/render.c src/physics.c -o build/wasm/ai_drive_test.js
+	node build/wasm/ai_drive_test.js
+	@echo "All Wasm tests PASSED!"
+
 run: nfsu2
 	./nfsu2 $(DATA)
 
@@ -259,4 +293,4 @@ clean:
 	rm -f nfsu2 *.png $(GEN)
 	rm -rf build
 
-.PHONY: run normal menu gles clean debug world-instance-test world-cli-test car-material-test world-render-test world-resident-test district-collision-test wheel-render-test light-state-test world-texture-test world-group-test world-group-audit ai-drive-test ai-drive-cli-test resolution-cli-test render-resolution-test
+.PHONY: run normal menu gles clean debug world-instance-test world-cli-test car-material-test world-render-test world-resident-test district-collision-test wheel-render-test light-state-test world-texture-test world-group-test world-group-audit ai-drive-test ai-drive-cli-test resolution-cli-test render-resolution-test wasm wasm-web wasm-test

@@ -24,6 +24,9 @@
 #include <time.h>
 #include <unistd.h>   /* execvp: menu track-switch re-launches the process */
 #include <SDL.h>
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
 
 #include "nfsu2.h"
 #include "car_mod.h"
@@ -8886,6 +8889,9 @@ int main(int argc, char **argv) {
         }
 #endif
         SDL_GL_SwapWindow(win);
+#ifdef __EMSCRIPTEN__
+        emscripten_sleep(0);
+#endif
         /* Raw --shot audits can simulate seconds during a few milliseconds of
            real I/O. Opt-in pacing makes worker latency comparable to interactive
            60 Hz driving. No physics inputs or integration equations change. */
