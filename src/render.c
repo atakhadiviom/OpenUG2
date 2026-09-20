@@ -3,9 +3,14 @@
  * (nfsu2.h) is untouched ground truth. */
 #include <stdio.h>
 #include <string.h>
+#define _USE_MATH_DEFINES
 #include <math.h>
 #include <limits.h>
 #include <zlib.h>   /* screenshot PNG (dev only) */
+
+#ifndef M_PI
+#  define M_PI 3.14159265358979323846
+#endif
 
 #include "render.h"
 

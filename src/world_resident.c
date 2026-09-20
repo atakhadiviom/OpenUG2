@@ -1,3 +1,6 @@
+#define _POSIX_C_SOURCE 199309L
+#define _DEFAULT_SOURCE
+
 #include "world_resident.h"
 
 #include <math.h>
