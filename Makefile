@@ -257,15 +257,15 @@ EMCC ?= emcc
 WASM_FLAGS := -O2 -std=c99 -DN2_GLES -Wno-unused-function \
               -sUSE_SDL=2 -sUSE_ZLIB=1 -sSTACK_SIZE=4MB -sINITIAL_MEMORY=64MB \
               -sALLOW_MEMORY_GROWTH=1 -sFULL_ES2=1 -sMAX_WEBGL_VERSION=2 \
-              -sASYNCIFY=1 -sEXPORTED_RUNTIME_METHODS='["ccall","cwrap","FS"]'
+              -sASYNCIFY=1 -sEXPORTED_RUNTIME_METHODS='["ccall","cwrap","FS","callMain"]'
 
 wasm: $(SRC) $(HDRS) $(GEN)
 	@mkdir -p build/wasm
 	$(EMCC) $(WASM_FLAGS) -Isrc $(SRC) -o build/wasm/nfsu2.js
 
-wasm-web: $(SRC) $(HDRS) $(GEN)
+wasm-web: $(SRC) $(HDRS) $(GEN) web/shell_openug2.html
 	@mkdir -p build/web
-	$(EMCC) $(WASM_FLAGS) -Isrc $(SRC) -o build/web/index.html
+	$(EMCC) $(WASM_FLAGS) --shell-file web/shell_openug2.html -Isrc $(SRC) -o build/web/index.html
 
 wasm-test: $(HDRS) $(GEN)
 	@mkdir -p build/wasm
