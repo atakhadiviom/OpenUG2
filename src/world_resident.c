@@ -1,6 +1,7 @@
-#define _POSIX_C_SOURCE 199309L
+#define _POSIX_C_SOURCE 200809L
 #define _DEFAULT_SOURCE
 
+#include <stdio.h>
 #include "world_resident.h"
 
 #include <math.h>
@@ -501,8 +502,12 @@ int world_resident_job_start(WResidentJob **slot, const WResidentBuildArgs *args
     }
     job->thread = SDL_CreateThread(resident_worker, "world-prepare", job);
     if (!job->thread) {
+#if defined(__EMSCRIPTEN__) || defined(OPENUG2_NO_THREADS)
+        resident_worker(job);
+#else
         SDL_AtomicSet(&resident_loader_busy, 0);
         free(job->candidate); resident_job_free(job); return 0;
+#endif
     }
     *slot = job;
     return 1;
@@ -512,7 +517,7 @@ int world_resident_job_take(WResidentJob **slot, WorldResident **candidate,
                             WResidentBuildTiming *timing) {
     if (!slot || !*slot || !candidate || !SDL_AtomicGet(&(*slot)->done)) return 0;
     WResidentJob *job = *slot;
-    SDL_WaitThread(job->thread, NULL);
+    if (job->thread) SDL_WaitThread(job->thread, NULL);
     *candidate = job->candidate;
     if (timing) *timing = job->timing;
     int result = job->ok ? 1 : -1;
@@ -525,7 +530,7 @@ int world_resident_job_take(WResidentJob **slot, WorldResident **candidate,
 void world_resident_job_cancel(WResidentJob **slot) {
     if (!slot || !*slot) return;
     WResidentJob *job = *slot;
-    SDL_WaitThread(job->thread, NULL);
+    if (job->thread) SDL_WaitThread(job->thread, NULL);
     world_resident_free(job->candidate);
     resident_job_free(job);
     SDL_AtomicSet(&resident_loader_busy, 0);
